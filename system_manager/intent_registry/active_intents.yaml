@@ -1,0 +1,54 @@
+# Active Intents Registry
+# Tracks all intents currently being processed by the organization.
+# Each intent moves through: submitted → decomposing → architecture → executing → validating → completed | failed
+
+intents:
+  - intent_id: "intent-001"
+    submitted_by: "human_governor"
+    submitted_at: "2026-05-25T10:00:00Z"
+    raw_intent: "I want a login page with email and password authentication"
+    status: "executing"
+    current_layer: "execution_planning"
+    priority: "high"
+    features:
+      - feature_id: "feat-001"
+        name: "user_login"
+        status: "be_in_progress"
+      - feature_id: "feat-002"
+        name: "forgot_password"
+        status: "pending"
+      - feature_id: "feat-003"
+        name: "input_validation"
+        status: "fe_in_progress"
+    contracts_generated: true
+    contracts_approved: true
+    assigned_agents:
+      frontend: "fe-agent-01"
+      backend: "be-agent-01"
+    created_at: "2026-05-25T10:00:00Z"
+    updated_at: "2026-05-25T11:30:00Z"
+
+  - intent_id: "intent-002"
+    submitted_by: "human_governor"
+    submitted_at: "2026-05-25T11:00:00Z"
+    raw_intent: "Add a user profile page where users can update their name and avatar"
+    status: "architecture"
+    current_layer: "architecture_layer"
+    priority: "normal"
+    features: []
+    contracts_generated: false
+    contracts_approved: false
+    assigned_agents: {}
+    created_at: "2026-05-25T11:00:00Z"
+    updated_at: "2026-05-25T11:15:00Z"
+
+# Status lifecycle:
+#   submitted       → Human submitted the intent, awaiting decomposition
+#   decomposing     → Intent layer is breaking down requirements
+#   architecture    → Architecture layer is generating contracts
+#   awaiting_review → Contracts generated, waiting for human approval
+#   executing       → FE/BE agents are implementing
+#   validating      → Validation layer is checking consistency
+#   completed       → All checks passed, intent delivered
+#   failed          → Unrecoverable failure, requires human intervention
+#   blocked         → Waiting on dependency from another intent
