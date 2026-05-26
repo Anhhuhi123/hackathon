@@ -1,3 +1,65 @@
+import { useAuthStore } from '../stores/authStore'
+
+type RequestInitWithRetry = RequestInit & { _retry?: boolean }
+
+let logoutHandler: (() => void) | null = null
+
+export function setLogoutHandler(fn: () => void) {
+  logoutHandler = fn
+}
+
+async function refreshToken(): Promise<boolean> {
+  try {
+    const res = await fetch('/api/v1/auth/refresh', { method: 'POST', credentials: 'include' })
+    if (!res.ok) return false
+    const data = await res.json()
+    // assume { access_token }
+    if (data?.access_token) {
+      useAuthStore.getState().setAccessToken(data.access_token)
+      return true
+    }
+    return false
+  } catch (err) {
+    return false
+  }
+}
+
+export async function apiFetch(input: RequestInfo, init?: RequestInitWithRetry) {
+  const { accessToken } = useAuthStore.getState()
+  const headers = new Headers(init?.headers as HeadersInit)
+  headers.set('Content-Type', headers.get('Content-Type') || 'application/json')
+  if (accessToken) headers.set('Authorization', `Bearer ${accessToken}`)
+
+  const opts: RequestInitWithRetry = { ...(init || {}), headers, credentials: 'include' }
+
+  const res = await fetch(input, opts)
+
+  if (res.status === 401 && !init?._retry) {
+    const refreshed = await refreshToken()
+    if (refreshed) {
+      // retry original request once
+      return apiFetch(input, { ...(init || {}), _retry: true })
+    }
+    // refresh failed — call logout handler if provided
+    if (logoutHandler) logoutHandler()
+    const err: any = new Error('REFRESH_FAILED')
+    err.code = 'REFRESH_FAILED'
+    throw err
+  }
+
+  return res
+}
+
+export async function apiJson<T = any>(input: RequestInfo, init?: RequestInitWithRetry) {
+  const res = await apiFetch(input, init)
+  const contentType = res.headers.get('Content-Type') || ''
+  if (contentType.includes('application/json')) return (await res.json()) as T
+  return null as unknown as T
+}
+
+export const fetchApi = apiFetch
+
+export default { apiFetch, apiJson, fetchApi, setLogoutHandler }
 import { useAuthStore } from '../stores/authStore';
 
 const API_URL = import.meta.env.VITE_API_URL || '';

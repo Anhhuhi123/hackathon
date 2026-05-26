@@ -57,3 +57,18 @@ intents:
       backend: COMPLETED
       validation: PENDING
     notes: "Intent automatically updated by Requirement Layer"
+
+  - intent_id: DASHBOARD_001
+    title: "Football Betting Dashboard"
+    status: PROCESSING
+    created_at: "2026-05-26T03:21:26Z"
+    completed_at: null
+    dependencies:
+      - LOGIN_001
+    layer_status:
+      requirement: COMPLETED
+      architecture: COMPLETED
+      frontend: PENDING
+      backend: PENDING
+      validation: PENDING
+    notes: "Architecture completed; scope locked to demo/pre-match/mock credit."

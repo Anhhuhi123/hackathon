@@ -26,6 +26,13 @@ graph:
     impacts: []
     description: "User authentication login page"
 
+  DASHBOARD_001:
+    depends_on:
+      - LOGIN_001
+    impacts:
+      - LOGIN_001
+    description: "Football betting dashboard after login"
+
   # Ví dụ về dependency chain thực tế:
   #
   # USER_001:

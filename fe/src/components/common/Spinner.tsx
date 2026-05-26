@@ -1,3 +1,14 @@
+import React from 'react'
+
+export const Spinner: React.FC = () => (
+  <div role="status" aria-live="polite" className="spinner">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="12" r="10" stroke="#ccc" strokeWidth="4" strokeDasharray="60" strokeLinecap="round"></circle>
+    </svg>
+  </div>
+)
+
+export default Spinner
 import React from 'react';
 
 export const Spinner: React.FC<{ className?: string }> = ({ className = '' }) => (
