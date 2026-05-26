@@ -7,7 +7,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from src.routes.auth import router as auth_router
+from src.routes.betting import router as betting_router
 from src.models.base import Base
+from src.models.betting import Wallet, Match, Market, Selection, BetQuote, BetQuoteSelection, Bet, BetSelection, IdempotencyKey
 from src.utils.database import engine
 
 from fastapi.middleware.cors import CORSMiddleware
@@ -63,3 +65,5 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     )
 
 app.include_router(auth_router, prefix="/api/v1/auth", tags=["auth"])
+app.include_router(betting_router, prefix="/api/v1", tags=["betting"])
+

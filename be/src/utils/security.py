@@ -40,3 +40,10 @@ def generate_refresh_token() -> tuple[str, str]:
     # Fast hash for refresh token DB lookup (SHA-256 is fine here as it's a high entropy random string)
     token_hash = hashlib.sha256(token.encode('utf-8')).hexdigest()
     return token, token_hash
+
+def decode_jwt_access_token(token: str) -> dict:
+    public_key = os.getenv("JWT_PUBLIC_KEY", "").replace("\\n", "\n")
+    if not public_key:
+        raise ValueError("JWT_PUBLIC_KEY is not configured")
+    return jwt.decode(token, public_key, algorithms=["RS256"])
+

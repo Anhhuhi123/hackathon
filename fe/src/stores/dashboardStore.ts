@@ -29,8 +29,11 @@ interface DashboardState {
   loadMatches: (filters?: any) => Promise<void>
   createQuote: () => Promise<void>
   placeBet: () => Promise<void>
-  refreshWallet?: () => Promise<void>
-  refreshBetHistory?: () => Promise<void>
+  refreshWallet: () => Promise<void>
+  refreshBetHistory: () => Promise<void>
+  toggleSelection: (selection: SelectionSummary) => void
+  setStake: (amount: number) => void
+  clearQuote: () => void
 }
 
 export const useDashboardStore = create<DashboardState>((set, get) => ({
@@ -85,7 +88,6 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
     }
   },
   
-  // create quote and place bet
   createQuote: async () => {
     const state = get()
     set({ isCreatingQuote: true, error: null })
@@ -98,11 +100,9 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
       if (res.status === 201) {
         const quote = await res.json()
         set({ currentQuote: quote })
-      } else if (res.status === 400) {
-        const data = await res.json()
-        throw new Error(data.message || 'QUOTE_VALIDATION_FAILED')
       } else {
-        throw new Error('QUOTE_FAILED')
+        const data = await res.json()
+        throw new Error(data.message || 'Tạo quote thất bại')
       }
     } catch (err: any) {
       set({ error: err.message || 'Không thể tạo quote' })
@@ -123,17 +123,14 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
         body: JSON.stringify({ quote_id: state.currentQuote.id }),
       })
       if (res.status === 201 || res.status === 200) {
-        const bet = await res.json()
         // on success, reset bet slip and refresh wallet + bets
         set({ currentQuote: null, selectedSelections: [], currentStake: 0 })
         // best-effort refresh
-        get().refreshWallet?.()
-        get().refreshBetHistory?.()
-      } else if (res.status === 409) {
-        const data = await res.json()
-        throw new Error(data.message || 'CONFLICT')
+        await get().refreshWallet()
+        await get().refreshBetHistory()
       } else {
-        throw new Error('PLACE_BET_FAILED')
+        const data = await res.json()
+        throw new Error(data.message || 'Đặt cược thất bại')
       }
     } catch (err: any) {
       set({ error: err.message || 'Không thể đặt cược' })
@@ -163,6 +160,26 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
       // silent
     }
   },
+
+  toggleSelection: (selection: SelectionSummary) => {
+    const { selectedSelections } = get()
+    const exists = selectedSelections.find((s: any) => s.id === selection.id)
+    let nextSelections = []
+    if (exists) {
+      nextSelections = selectedSelections.filter((s: any) => s.id !== selection.id)
+    } else {
+      nextSelections = [...selectedSelections, selection]
+    }
+    set({ selectedSelections: nextSelections, currentQuote: null })
+  },
+
+  setStake: (amount: number) => {
+    set({ currentStake: amount, currentQuote: null })
+  },
+
+  clearQuote: () => {
+    set({ currentQuote: null })
+  }
 }))
 
 export default useDashboardStore
