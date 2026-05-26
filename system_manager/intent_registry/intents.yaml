@@ -1,0 +1,59 @@
+# Intent Registry — Organizational Queue
+#
+# Đây là danh sách toàn bộ intents trong hệ thống.
+# Mỗi intent đại diện cho một unit of work đã được clarify
+# và đang ở một trạng thái cụ thể trong pipeline.
+#
+# STATUS VALUES:
+#   PENDING    - Đã đăng ký, chưa bắt đầu xử lý
+#   PROCESSING - Đang trong pipeline (bất kỳ layer nào)
+#   COMPLETED  - Đã deliver, validation passed
+#   FAILED     - Validation failed, cần review
+#
+# RULE: Chỉ Requirement Layer được phép tạo intent mới.
+#       Chỉ Validation Layer được phép set status → COMPLETED.
+
+intents:
+  - intent_id: EXAMPLE_001
+    title: "Example Intent — Authentication System"
+    status: COMPLETED
+    created_at: "2026-05-26T00:00:00Z"
+    completed_at: "2026-05-26T01:00:00Z"
+    dependencies: []
+    layer_status:
+      requirement: COMPLETED
+      architecture: COMPLETED
+      frontend: COMPLETED
+      backend: COMPLETED
+      validation: COMPLETED
+    notes: "Reference intent — demonstrates full lifecycle"
+
+  # Template cho intent mới:
+  # - intent_id: FEATURE_001
+  #   title: "Tên feature ngắn gọn"
+  #   status: PENDING
+  #   created_at: "YYYY-MM-DDTHH:MM:SSZ"
+  #   completed_at: null
+  #   dependencies:
+  #     - AUTH_001   # Intent này phụ thuộc AUTH_001 phải COMPLETED trước
+  #   layer_status:
+  #     requirement: PENDING
+  #     architecture: PENDING
+  #     frontend: PENDING
+  #     backend: PENDING
+  #     validation: PENDING
+  #   notes: ""
+
+  - intent_id: LOGIN_001
+    title: "User Authentication Login Page"
+    status: PROCESSING
+    created_at: "2026-05-26T02:09:00Z"
+    completed_at: null
+    dependencies: []
+    layer_status:
+      requirement: COMPLETED
+      architecture: COMPLETED
+      frontend: COMPLETED
+      backend: COMPLETED
+      validation: PENDING
+    notes: "Intent automatically updated by Requirement Layer"

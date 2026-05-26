@@ -1,69 +1,117 @@
-# System Manager — AI Organizational Operating System
+# System Manager — AI Organizational Engineering
 
-## What This Is
+## Triết lý: AI Organizational Engineering (AOE)
 
-This is the governance framework for an **AI-native software production organization**. Humans describe business intent; AI agents decompose and execute. The system processes work **intent-by-intent**, not as monolithic projects.
+> *Phần mềm không được viết bởi con người. Phần mềm được sản xuất bởi một tổ chức AI có kỷ luật, có governance, và có hệ thống kiểm soát chất lượng rõ ràng.*
 
-## How It Works
+---
+
+## 1. Tổng quan
+
+`system_manager/` là trung tâm điều phối của toàn bộ hệ thống AI-native engineering. Đây không phải là một bộ tài liệu — đây là **organizational operating system** điều hành quá trình sản xuất phần mềm theo từng intent.
+
+Hệ thống được xây dựng trên 4 nguyên tắc cốt lõi:
+
+| Nguyên tắc | Mô tả |
+|---|---|
+| **Intent-driven** | Mọi công việc đều bắt đầu từ một intent rõ ràng, có ID, có lifecycle |
+| **Contract-first** | FE và BE không giao tiếp trực tiếp — họ chỉ tuân theo architecture contract |
+| **Layer isolation** | Mỗi layer chỉ được phép đọc/ghi file thuộc ownership của mình |
+| **Deterministic flow** | Mỗi intent đi theo đúng một pipeline: Requirement → Architecture → Execution → Validation |
+
+---
+
+## 2. Workflow Execution
 
 ```
-Human Intent → Intent Layer → Architecture Layer → Execution Planning → FE/BE Agents → Validation → Done
+User Intent
+    │
+    ▼
+[Requirement Layer]
+    │  Clarify, infer, document intent
+    │  Output: intent.md
+    ▼
+[Architecture Layer]
+    │  Design APIs, contracts, schemas
+    │  Output: architecture.md, frontend_task.md, backend_task.md, validation_task.md
+    ▼
+[FE Agent] ──────── [BE Agent]
+    │  Parallel execution        │
+    │  Bound to frontend_task    │  Bound to backend_task
+    │  Source: FE codebase       │  Source: BE codebase
+    ▼                            ▼
+[Validation Layer]
+    │  Test integration, contracts, UX flows
+    │  Output: validation_report.md
+    ▼
+[Completed Intent]
+    │  Status updated in intents.yaml → COMPLETED
 ```
 
-### Roles
+---
 
-| Role | Actor | Responsibility |
-|------|-------|----------------|
-| Organizational Governor | Human | Define intents, approve architecture, set policies |
-| Architecture Supervisor | Human | Review contracts, resolve conflicts, guide decisions |
-| Intent Decomposer | AI Agent | Break raw intent into structured requirements |
-| Architecture Agent | AI Agent | Generate API/DB/execution contracts |
-| Execution Planner | AI Agent | Split work into parallel FE/BE tasks |
-| Frontend Agent | AI Agent | Implement UI components and pages |
-| Backend Agent | AI Agent | Implement APIs, services, and data layers |
-| Validation Agent | AI Agent | Verify consistency, run tests, report gaps |
+## 3. Supervision Model
 
-### Execution Flow
+Con người trong hệ thống này đóng vai trò **Organizational Governor** — không viết code, không quyết định implementation, nhưng:
 
-1. **Human** submits a business intent (e.g., "I want a login page")
-2. **Intent Layer** decomposes into structured requirements (login API, JWT, forgot password, etc.)
-3. **Architecture Layer** generates contracts (API schemas, DB models, execution contracts)
-4. **Execution Planner** creates parallel task trees for FE and BE agents
-5. **FE/BE Agents** execute tasks against contracts
-6. **Validation Layer** checks contract compliance and cross-agent consistency
-7. **Intent state** updates to `completed` or cycles back with feedback
+- Phê duyệt intent trước khi vào Requirement Layer
+- Giám sát kiến trúc trước khi FE/BE bắt đầu thực thi
+- Review validation_report.md và quyết định COMPLETED hoặc retry
 
-## Directory Structure
+AI agents đóng vai trò **Execution Workers** — có nhiệm vụ rõ ràng, có boundary rõ ràng, không được phép vượt qua ranh giới layer.
+
+---
+
+## 4. Intent Lifecycle
+
+Mỗi intent trải qua các trạng thái sau:
+
+```
+PENDING → PROCESSING → COMPLETED
+              │
+              └──► (FAILED → retry → PROCESSING)
+```
+
+| Status | Ý nghĩa |
+|---|---|
+| `PENDING` | Intent đã được đăng ký, chờ xử lý |
+| `PROCESSING` | Đang trong pipeline (bất kỳ layer nào) |
+| `COMPLETED` | Validation passed, intent đã được deliver |
+| `FAILED` | Validation failed, cần retry hoặc re-architect |
+
+---
+
+## 5. Cấu trúc thư mục
 
 ```
 system_manager/
-├── organizational_constitution/   # Governance rules and policies
-├── intent_registry/               # Active intents and their execution state
-├── layers/                        # Agent layer definitions and schemas
-│   ├── intent_layer/              # Intent decomposition agent
-│   ├── architecture_layer/        # Contract generation agent
-│   ├── execution_planning/        # Task orchestration agent
-│   ├── frontend_agent/            # UI implementation agent
-│   ├── backend_agent/             # API/service implementation agent
-│   └── validation_layer/          # Testing and consistency agent
-├── shared_memory/                 # Persistent organizational knowledge
-└── runtime/                       # Live execution state
+├── README.md                          ← File này
+├── organizational_architecture.md     ← Full system flow diagram
+├── intent_registry/
+│   ├── intents.yaml                   ← Organizational queue
+│   ├── dependency_graph.yaml          ← Inter-intent dependencies
+│   └── intents/
+│       └── {INTENT_ID}/              ← Isolated workspace per intent
+│           ├── intent.md
+│           ├── architecture.md
+│           ├── frontend_task.md
+│           ├── backend_task.md
+│           ├── validation_task.md
+│           └── validation_report.md
+└── layers/
+    ├── requirement_layer/
+    ├── architecture_layer/
+    ├── frontend_agent/
+    ├── backend_agent/
+    └── validation_layer/
 ```
 
-## Key Files
+---
 
-| File | Purpose |
-|------|---------|
-| `communication_protocol.md` | How agents exchange structured messages |
-| `api_contract_rules.md` | How API contracts are defined and enforced |
-| `execution_schema.md` | Schema for execution task objects |
-| `task_decomposition.md` | How intents become executable tasks |
-| `output_schema.md` (per layer) | What each agent produces |
+## 6. Golden Rules
 
-## Quick Start
-
-1. Read `organizational_constitution/mission.md` to understand the system's purpose
-2. Read `communication_protocol.md` to understand inter-agent messaging
-3. Submit an intent to the `intent_registry/active_intents.yaml`
-4. The system processes it through the layer pipeline
-5. Monitor execution in `runtime/execution_logs/`
+1. **Không có agent nào được phép ghi vào file của layer khác**
+2. **Architecture contract là nguồn sự thật duy nhất giữa FE và BE**
+3. **Không có implementation nào được bắt đầu khi chưa có architecture.md**
+4. **Validation layer là cổng cuối cùng — không có exception**
+5. **Mọi thay đổi đều phải trace về một intent_id cụ thể**

@@ -1,45 +1,53 @@
-# Dependency Graph
-# Tracks dependencies between intents and between features within intents.
-# Used by execution planner to determine task ordering and parallelization.
+# Dependency Graph — Inter-Intent Relationships
+#
+# File này mô tả quan hệ phụ thuộc giữa các intents/features trong hệ thống.
+# Architecture Layer sử dụng file này để:
+#   1. Kiểm tra intent mới có phụ thuộc intent nào chưa COMPLETED không
+#   2. Hiểu impact của một intent lên các intent khác
+#   3. Tránh breaking changes với existing contracts
+#
+# FORMAT:
+#   DEPENDENT_INTENT:
+#     depends_on:
+#       - REQUIRED_INTENT   # Ý nghĩa của dependency
+#     impacts:
+#       - AFFECTED_INTENT   # Intent nào bị ảnh hưởng nếu contract thay đổi
+#
+# RULE: Architecture Layer phải cập nhật file này mỗi khi tạo intent mới.
 
-intent_dependencies:
-  # intent-002 depends on intent-001 because profile page requires authentication
-  - dependent: "intent-002"
-    depends_on: "intent-001"
-    dependency_type: "requires_completion"
-    reason: "Profile page requires authenticated user, which is delivered by login intent"
-    blocking: true
+graph:
+  EXAMPLE_001:
+    depends_on: []
+    impacts: []
+    description: "Root intent — không phụ thuộc vào intent nào"
 
-feature_dependencies:
-  # Within intent-001: forgot_password depends on user_login (needs user table)
-  - intent_id: "intent-001"
-    dependent: "feat-002"
-    depends_on: "feat-001"
-    dependency_type: "shared_resource"
-    shared_resource: "users table"
-    blocking: false  # Can proceed in parallel since DB contract covers both
+  USER_001:
+    depends_on: []
+    impacts: []
+    description: "User authentication login page"
 
-  # Within intent-001: input_validation is independent
-  - intent_id: "intent-001"
-    dependent: "feat-003"
-    depends_on: null
-    dependency_type: "none"
-    blocking: false
+  # Ví dụ về dependency chain thực tế:
+  #
+  # USER_001:
+  #   depends_on:
+  #     - AUTH_001    # User profile chỉ tồn tại sau khi auth system hoạt động
+  #   impacts:
+  #     - DASHBOARD_001  # Dashboard dùng user data
+  #     - SETTINGS_001   # Settings gắn với user profile
+  #   description: "User profile management"
+  #
+  # SESSION_001:
+  #   depends_on:
+  #     - AUTH_001    # Session lifecycle phụ thuộc vào auth
+  #   impacts:
+  #     - API_GATEWAY_001  # Mọi API call cần valid session
+  #   description: "Session management và token refresh"
 
-# Parallelization rules:
-#   - Features with no dependencies can execute in parallel
-#   - Features with "shared_resource" dependency and blocking: false can execute in parallel
-#     if the shared resource contract is already defined
-#   - Features with blocking: true must wait for dependency completion
-#   - Cross-intent dependencies always block
-
-cross_cutting_concerns:
-  - concern: "users_table"
-    used_by_intents: ["intent-001", "intent-002"]
-    contract_owner: "intent-001"
-    status: "active"
-
-  - concern: "jwt_auth_middleware"
-    used_by_intents: ["intent-001", "intent-002"]
-    contract_owner: "intent-001"
-    status: "active"
+# Visualization (ASCII):
+#
+#   AUTH_001
+#   ├── USER_001
+#   │   ├── DASHBOARD_001
+#   │   └── SETTINGS_001
+#   └── SESSION_001
+#       └── API_GATEWAY_001
